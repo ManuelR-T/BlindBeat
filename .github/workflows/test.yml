@@ -1,0 +1,28 @@
+name: Test
+
+on: [workflow_call]
+jobs:
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+      - name: Cache node_modules
+        uses: actions/cache@v3
+        id: cache-node-modules
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/bun.lockb', '**/prisma/schema.prisma') }}
+      - name: Install dependencies (if cache miss)
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: bun install
+      - name: Generate Prisma Client
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: bunx prisma generate
+      - name: Test
+        run: bun test

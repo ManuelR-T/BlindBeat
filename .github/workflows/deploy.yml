@@ -1,0 +1,38 @@
+name: Deploy
+on:
+  workflow_call:
+    secrets:
+      TOKEN:
+        required: true
+      CLIENT_ID:
+        required: true
+
+jobs:
+  update:
+    name: Update bot commands
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+      - name: Cache node_modules
+        uses: actions/cache@v3
+        id: cache-node-modules
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/bun.lockb', '**/prisma/schema.prisma') }}
+      - name: Install dependencies (if cache miss)
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: bun install
+      - name: Generate Prisma Client
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: bunx prisma generate
+
+      - name: Upload command list
+        run: bun run commands:update
+        env:
+          TOKEN: ${{ secrets.TOKEN }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}

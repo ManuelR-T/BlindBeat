@@ -1,0 +1,45 @@
+name: Pipeline
+on: [push]
+jobs:
+  setup:
+    name: Setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+      - name: Cache node_modules
+        uses: actions/cache@v3
+        id: cache-node-modules
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/bun.lockb', '**/prisma/schema.prisma') }}
+      - name: Install dependencies (if cache miss)
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: bun install
+      - name: Generate Prisma Client
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: bunx prisma generate
+  build:
+    name: Build
+    needs: setup
+    uses: ./.github/workflows/build.yml
+  quality:
+    name: Quality
+    needs: setup
+    uses: ./.github/workflows/quality.yml
+  test:
+    name: Test
+    needs: build
+    uses: ./.github/workflows/test.yml
+#  deploy:
+#    name: Deploy
+#    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+#    needs: [quality, test]
+#    uses: ./.github/workflows/deploy.yml
+#    secrets:
+#      CLIENT_ID: ${{ secrets.CLIENT_ID }}
+#      TOKEN: ${{ secrets.TOKEN }}
