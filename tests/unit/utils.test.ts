@@ -4,5 +4,4 @@ describe('Placeholder', () => {
   test('Placeholder', () => {
     expect(true).toBe(true)
   })
-
 })
