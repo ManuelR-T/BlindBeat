@@ -1,3 +1,6 @@
+import dotenv from 'dotenv'
+dotenv.config()
+
 export default class Config {
   private static getEnv(variable: string, defaultValue?: string): string {
     const value = process.env[variable] || defaultValue

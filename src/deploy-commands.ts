@@ -1,8 +1,7 @@
-import { fileURLToPath } from 'bun'
 import { REST } from 'discord.js'
 import { Routes } from 'discord-api-types/v10'
 import { readdirSync } from 'fs'
-import path, { join } from 'path'
+import { join } from 'path'
 import { logger } from 'utils'
 
 import Config from '@/config'
@@ -10,7 +9,7 @@ import Config from '@/config'
 import { Command } from './types'
 
 const commands: Command[] = []
-const dirName = path.dirname(fileURLToPath(new URL(import.meta.url)))
+const dirName = __dirname
 const foldersPath = join(dirName, 'commands')
 const commandFolders = readdirSync(foldersPath)
 
@@ -18,15 +17,14 @@ async function loadCommands(): Promise<void> {
   for (const folder of commandFolders) {
     const commandsPath = join(foldersPath, folder)
     const commandFiles = readdirSync(commandsPath).filter(
-      (file) => file === 'index.ts',
+      (file) => file === 'index.ts' || file === 'index.js',
     )
 
     for (const file of commandFiles) {
       const filePath = join(commandsPath, file)
       try {
-        const importCommand = await import(filePath)
-        const command = importCommand.default
-
+        const importedModule = await import(filePath)
+        const command = importedModule.default.default
         if ('data' in command && 'execute' in command) {
           logger.info(`Loading ${command.data.name} command ...`)
           commands.push(command.data.toJSON())
@@ -71,4 +69,4 @@ const refreshApplicationCommands = async (): Promise<void> => {
   }
 }
 
-await refreshApplicationCommands()
+refreshApplicationCommands()

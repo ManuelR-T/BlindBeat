@@ -1,22 +1,18 @@
-FROM node:latest AS builder
+FROM node:latest AS base
 
 WORKDIR /app
 
 COPY package.json tsconfig.json ./
+RUN npm install
+
+
 COPY src ./src
 COPY prisma ./prisma
+RUN npx prisma generate && \
+    npm run build && \
+    npm prune --production
 
-RUN npm install && \
-    npx prisma generate && \
-    npx tsc && \
-    rm -rf package-lock.json prisma
-
-FROM oven/bun:latest
-
-WORKDIR /app
-COPY --from=builder /app/ .
+# Setup for runtime
 COPY data /app/data
-COPY bun.lockb ./bun.lockb
-RUN bun install --production
 
-CMD bun run start
+CMD ["node", "dist/index.js"]

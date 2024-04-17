@@ -6,7 +6,7 @@ import { handleCommands, handleEvents } from './handlers'
 import { MyClient } from './types'
 
 const client = new MyClient({
-  intents: [GatewayIntentBits.Guilds],
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
 })
 
 handleCommands(client)

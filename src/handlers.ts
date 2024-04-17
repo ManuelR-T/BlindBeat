@@ -1,4 +1,3 @@
-import { fileURLToPath } from 'bun'
 import { Collection, Events } from 'discord.js'
 import fs from 'fs'
 import path from 'path'
@@ -7,7 +6,7 @@ import { logger } from 'utils'
 import { MyClient } from './types'
 
 export const handleEvents = async (client: MyClient): Promise<void> => {
-  const dirName = path.dirname(fileURLToPath(new URL(import.meta.url)))
+  const dirName = __dirname
   const eventFolders = fs
     .readdirSync(path.join(dirName, 'events'))
     .filter((folder) => Object.values(Events).includes(folder as Events))
@@ -19,8 +18,8 @@ export const handleEvents = async (client: MyClient): Promise<void> => {
       .filter((file) => file === 'index.js' || file === 'index.ts')
     for (const file of eventFiles) {
       const filePath = path.join(eventsPath, file)
-      const { default: event } = await import(filePath)
-
+      const importedModule = await import(filePath)
+      const event = importedModule.default.default
       if (event.once) {
         client.once(event.name, (client, ...args) =>
           event.listener(client, ...args),
@@ -35,7 +34,7 @@ export const handleEvents = async (client: MyClient): Promise<void> => {
 }
 
 export const handleCommands = async (client: MyClient): Promise<void> => {
-  const dirName = path.dirname(fileURLToPath(new URL(import.meta.url)))
+  const dirName = __dirname
 
   const commandFolders = fs.readdirSync(path.join(dirName, 'commands'))
   const foldersPath = path.join(dirName, 'commands')
@@ -49,7 +48,8 @@ export const handleCommands = async (client: MyClient): Promise<void> => {
     for (const file of commandFiles) {
       const filePath = path.join(commandsPath, file)
       try {
-        const { default: command } = await import(filePath)
+        const importedModule = await import(filePath)
+        const command = importedModule.default.default
         if ('data' in command && 'execute' in command) {
           client.commands.set(command.data.name, command)
           client.cooldowns.set(command.data.name, new Collection())
