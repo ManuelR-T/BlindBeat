@@ -25,64 +25,81 @@ const data = new SlashCommandBuilder()
   )
 
 const execute = async (interaction: CommandInteraction): Promise<void> => {
-  const source = interaction.options.get('source')?.value as string
+  const source = interaction.options.get("source")?.value as string;
+  let videoUrl: string | undefined;
 
-  let videoUrl: string | undefined
-
-  interaction.deferReply({ ephemeral: true })
-
-  if ((await play.validate(source)) == 'yt_video') {
-    videoUrl = source
+  interaction.deferReply({ ephemeral: true });
+  if ((await play.validate(source)) == "yt_video") {
+    videoUrl = source;
   } else {
     const searchResults = await play.search(source, {
       limit: 1,
-      source: { youtube: 'video' },
-    })
+      source: { youtube: "video" },
+    });
     if (searchResults.length > 0) {
-      videoUrl = searchResults[0].url
+      videoUrl = searchResults[0].url;
     } else {
       interaction.followUp({
-        content: 'No video found for the provided input.',
+        content: "No video found for the provided input.",
         ephemeral: true,
-      })
-      return
+      });
+      return;
     }
   }
 
-  const member = interaction.member as GuildMember
-  const channel = member.voice.channel as VoiceChannel
+  const member = interaction.member as GuildMember;
+  const channel = member.voice.channel as VoiceChannel;
   if (!channel) {
     interaction.followUp({
-      content: 'You need to be in a voice channel to play music',
+      content: "You need to be in a voice channel to play music",
       ephemeral: true,
-    })
-    return
+    });
+    return;
   }
 
-  const stream = await play.stream(videoUrl)
+  const stream = await play.stream(videoUrl);
   const resource = createAudioResource(stream.stream, {
     inputType: stream.type,
-  })
+  });
 
-  const player = createAudioPlayer()
+  const player = createAudioPlayer();
+  player.on(AudioPlayerStatus.Idle, () => {
+    setTimeout(() => {
+      if (player.state.status === AudioPlayerStatus.Idle) {
+        connection.destroy();
+      }
+    }, 60000);
+  });
+  player.on("error", (error) => {
+    console.error(`Error: ${error.message}`);
+    connection.destroy();
+  });
+
   const connection = joinVoiceChannel({
     channelId: channel.id,
     guildId: interaction.guildId!,
     adapterCreator: channel.guild.voiceAdapterCreator,
-  })
+  });
+  connection.on("error", (error) => {
+    console.error(`Error: ${error.message}`);
+    connection.destroy();
+  });
 
-  connection.subscribe(player)
-  player.play(resource)
-  player.on(AudioPlayerStatus.Playing, () => {
+  if (!connection) {
     interaction.followUp({
-      content: `Now playing: ${videoUrl}`,
+      content: "Failed to join the voice channel",
       ephemeral: true,
-    })
-  })
+    });
+    return;
+  }
 
-  player.on(AudioPlayerStatus.Idle, () => {
-    connection.destroy()
-  })
+  connection.subscribe(player);
+
+  player.play(resource);
+  interaction.followUp({
+    content: `Now playing: ${videoUrl}`,
+    ephemeral: true,
+  });
 }
 
 export default { data, execute } as Command
