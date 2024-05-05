@@ -36,7 +36,7 @@ const execute = async (interaction: CommandInteraction): Promise<void> => {
       limit: 1,
       source: { youtube: "video" },
     });
-    if (searchResults.length > 0) {
+    if (searchResults != undefined &&  searchResults.length > 0 && searchResults[0].url != undefined) {
       videoUrl = searchResults[0].url;
     } else {
       interaction.followUp({
@@ -57,6 +57,27 @@ const execute = async (interaction: CommandInteraction): Promise<void> => {
     return;
   }
 
+  if (!channel.joinable) {
+    interaction.followUp({
+      content: "I don't have permission to join that voice channel",
+      ephemeral: true,
+    });
+    return;
+  }
+  if (!channel.speakable) {
+    interaction.followUp({
+      content: "I don't have permission to speak in that voice channel",
+      ephemeral: true,
+    });
+    return;
+  }
+  if (!videoUrl) {
+    interaction.followUp({
+      content: "No video found for the provided input.",
+      ephemeral: true,
+    });
+    return;
+  }
   const stream = await play.stream(videoUrl);
   const resource = createAudioResource(stream.stream, {
     inputType: stream.type,
