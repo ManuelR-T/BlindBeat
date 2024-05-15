@@ -12,7 +12,7 @@
     "db:update": "prisma generate",
     "dev": "nodemon --exec 'ts-node -r tsconfig-paths/register src/index.ts'",
     "start": "node dist/index.js",
-    "commands:update": "npm ./src/deploy-commands.ts",
+    "commands:update": "npx tsc-node ./src/deploy-commands.ts",
     "lint": "npx eslint --config config/.eslintrc.yml --ignore-path config/.eslintignore --ext .ts .",
     "lint:fix": "npx eslint --config config/.eslintrc.yml --ignore-path config/.eslintignore --ext .ts . --fix"
   },

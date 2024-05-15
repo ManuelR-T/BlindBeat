@@ -16,8 +16,8 @@ import { logger } from 'utils'
 import { Command } from '@/types'
 
 const data = new SlashCommandBuilder()
-  .setName('play')
-  .setDescription('Play music from a URL or search on YouTube for 30 seconds')
+  .setName('blindplay')
+  .setDescription('Play music from a URL or search on YouTube')
   .addStringOption((option) =>
     option
       .setName('source')
@@ -126,6 +126,10 @@ const execute = async (interaction: CommandInteraction): Promise<void> => {
     content: `Now playing: ${videoUrl}`,
     ephemeral: true,
   })
+
+  setTimeout(() => {
+    player.stop()
+  }, 30000)
 }
 
 export default { data, execute } as Command
