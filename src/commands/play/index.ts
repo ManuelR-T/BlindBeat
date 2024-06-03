@@ -126,33 +126,6 @@ const execute = async (interaction: CommandInteraction): Promise<void> => {
     content: `Now playing: ${videoUrl}`,
     ephemeral: true,
   })
-
-  //   const rowPlayer = new ActionRowBuilder<ButtonBuilder>().addComponents(
-  //     new ButtonBuilder()
-  //       .setCustomId("controlPanel")
-  //       .setLabel(`Play/Pause`)
-  //       .setEmoji("⏯️")
-  //       .setStyle(ButtonStyle.Secondary)
-  //   );
-  //   const message = await interaction.followUp({content: "Control Panel", ephemeral: false, components: [rowPlayer]})
-
-  //   const collector = message.createMessageComponentCollector({time: 60000})
-
-  //   collector.on("collect", async (i) => {
-  //     if (i.customId == "Play/Pause") {
-  //       if (player.state.status === AudioPlayerStatus.Playing)
-  //         player.pause()
-  //       else if (player.state.status === AudioPlayerStatus.Paused)
-  //         player.unpause()
-  //     }
-  //   })
-
-  //   collector.on("end", async () => {
-  //     rowPlayer.components[0].setDisabled(true);
-  //     await message.edit({
-  //       components: [rowPlayer],
-  //     });
-  //   });
 }
 
 export default { data, execute } as Command
